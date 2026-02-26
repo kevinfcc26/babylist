@@ -1,11 +1,11 @@
-import { gasPost } from './gasClient'
+import { gasRequest } from './gasClient'
 import type { CreateItemInput, UpdateItemInput } from '../types/list'
 
 export async function addItem(
   _listId: string,
   input: CreateItemInput & { adminCode: string }
 ): Promise<string> {
-  const res = await gasPost<{ itemId: string }>({
+  const res = await gasRequest<{ itemId: string }>({
     action: 'addItem',
     adminCode: input.adminCode,
     name: input.name,
@@ -25,7 +25,7 @@ export async function updateItem(
   data: UpdateItemInput & { adminCode: string }
 ): Promise<void> {
   const { adminCode, ...fields } = data
-  await gasPost({
+  await gasRequest({
     action: 'updateItem',
     adminCode,
     itemId,
@@ -38,7 +38,7 @@ export async function deleteItem(
   itemId: string,
   adminCode: string
 ): Promise<void> {
-  await gasPost({ action: 'deleteItem', adminCode, itemId })
+  await gasRequest({ action: 'deleteItem', adminCode, itemId })
 }
 
 export async function reserveItem(
@@ -47,7 +47,7 @@ export async function reserveItem(
   reservedBy: string,
   shareCode: string
 ): Promise<void> {
-  await gasPost({ action: 'reserveItem', shareCode, itemId, reservedBy })
+  await gasRequest({ action: 'reserveItem', shareCode, itemId, reservedBy })
 }
 
 export async function cancelReservation(
@@ -56,7 +56,7 @@ export async function cancelReservation(
   reservedBy: string,
   shareCode: string
 ): Promise<void> {
-  await gasPost({ action: 'cancelReservation', shareCode, itemId, reservedBy })
+  await gasRequest({ action: 'cancelReservation', shareCode, itemId, reservedBy })
 }
 
 export async function markPurchased(
@@ -65,7 +65,7 @@ export async function markPurchased(
   purchasedBy: string,
   shareCode: string
 ): Promise<void> {
-  await gasPost({ action: 'markPurchased', shareCode, itemId, purchasedBy })
+  await gasRequest({ action: 'markPurchased', shareCode, itemId, purchasedBy })
 }
 
 export async function suggestItem(
@@ -73,7 +73,7 @@ export async function suggestItem(
   shareCode: string,
   input: Pick<CreateItemInput, 'name' | 'category' | 'notes' | 'addedBy'>
 ): Promise<string> {
-  const res = await gasPost<{ itemId: string }>({
+  const res = await gasRequest<{ itemId: string }>({
     action: 'suggestItem',
     shareCode,
     name: input.name,

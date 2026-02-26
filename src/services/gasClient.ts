@@ -5,33 +5,22 @@ if (!GAS_URL) {
 }
 
 /**
- * GET request to GAS Web App via query params.
+ * All requests go as GET to avoid the GAS POST→GET redirect bug.
+ * The action is a plain query param; everything else is JSON-encoded
+ * in a single `payload` param so we don't pollute the query string.
+ *
+ * GAS doGet reads: e.parameter.action + JSON.parse(e.parameter.payload)
  */
-export async function gasGet<T>(params: Record<string, string>): Promise<T> {
+export async function gasRequest<T>(params: Record<string, unknown>): Promise<T> {
+  const { action, ...rest } = params
   const url = new URL(GAS_URL)
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v))
+  url.searchParams.set('action', String(action))
+  if (Object.keys(rest).length > 0) {
+    url.searchParams.set('payload', JSON.stringify(rest))
+  }
 
   const res = await fetch(url.toString())
-  if (!res.ok) throw new Error(`GAS request failed: ${res.status}`)
-
-  const data = await res.json() as { ok: boolean; error?: string } & T
-  if (!data.ok) throw new Error(data.error ?? 'Unknown GAS error')
-  return data
-}
-
-/**
- * POST request to GAS Web App.
- * Uses Content-Type: text/plain to avoid CORS preflight (GAS limitation).
- */
-export async function gasPost<T>(body: Record<string, unknown>): Promise<T> {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    // text/plain avoids OPTIONS preflight; GAS reads e.postData.contents regardless
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(body),
-  })
-
-  if (!res.ok) throw new Error(`GAS request failed: ${res.status}`)
+  if (!res.ok) throw new Error(`GAS error ${res.status}`)
 
   const data = await res.json() as { ok: boolean; error?: string } & T
   if (!data.ok) throw new Error(data.error ?? 'Unknown GAS error')

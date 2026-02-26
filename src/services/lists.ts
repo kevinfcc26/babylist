@@ -1,4 +1,4 @@
-import { gasPost } from './gasClient'
+import { gasRequest } from './gasClient'
 import type { BabyList, CreateListInput } from '../types/list'
 
 interface CreateListResponse {
@@ -9,7 +9,7 @@ interface CreateListResponse {
 }
 
 export async function createList(input: CreateListInput): Promise<BabyList> {
-  const res = await gasPost<CreateListResponse>({
+  const res = await gasRequest<CreateListResponse>({
     action: 'createList',
     ...input,
   })

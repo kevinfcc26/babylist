@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { gasGet } from '../services/gasClient'
+import { gasRequest } from '../services/gasClient'
 import type { BabyList, ListItem } from '../types/list'
 
 const POLL_INTERVAL_MS = 10_000
@@ -19,7 +19,7 @@ export function useList(shareCode: string) {
   const fetchList = useCallback(async () => {
     if (!shareCode) return
     try {
-      const data = await gasGet<GetListResponse>({ action: 'getList', shareCode })
+      const data = await gasRequest<GetListResponse>({ action: 'getList', shareCode })
       // Normalize id field (GAS returns listId)
       const normalizedList: BabyList = {
         ...data.list,

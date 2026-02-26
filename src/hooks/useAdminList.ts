@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { gasGet } from '../services/gasClient'
+import { gasRequest } from '../services/gasClient'
 import type { BabyList, ListItem } from '../types/list'
 
 const POLL_INTERVAL_MS = 10_000
@@ -19,12 +19,12 @@ export function useAdminList(adminCode: string) {
   const fetchList = useCallback(async () => {
     if (!adminCode) return
     try {
-      const data = await gasGet<GetListResponse>({ action: 'getList', adminCode })
+      const data = await gasRequest<GetListResponse>({ action: 'getList', adminCode })
       const normalizedList: BabyList = {
         ...data.list,
         id: data.list.id ?? data.list.listId ?? '',
       }
-      const normalizedItems: ListItem[] = data.items.map(item => ({
+      const normalizedItems: ListItem[] = data.items.map((item: ListItem & { id?: string; itemId?: string }) => ({
         ...item,
         id: item.id ?? item.itemId ?? '',
       }))

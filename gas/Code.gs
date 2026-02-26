@@ -36,32 +36,38 @@ function setup() {
 // Entry points
 // ---------------------------------------------------------------------------
 
+// All requests arrive as GET.
+// The action is in e.parameter.action; everything else is JSON-encoded
+// in e.parameter.payload (set by the frontend gasClient.ts).
 function doGet(e) {
-  return handleRequest(e.parameter, null);
+  const action = e.parameter.action;
+  const payload = e.parameter.payload ? JSON.parse(e.parameter.payload) : {};
+  return handleRequest({ action, ...payload });
 }
 
+// doPost kept as fallback (not normally called by the frontend).
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
-    return handleRequest(e.parameter, body);
+    return handleRequest(body);
   } catch (err) {
     return json({ ok: false, error: 'Invalid JSON body: ' + err.message });
   }
 }
 
-function handleRequest(params, body) {
-  const action = (params && params.action) || (body && body.action);
+function handleRequest(params) {
+  const action = params && params.action;
   try {
     switch (action) {
       case 'getList':           return json(getList(params));
-      case 'createList':        return json(createList(body));
-      case 'addItem':           return json(addItem(body));
-      case 'updateItem':        return json(updateItem(body));
-      case 'deleteItem':        return json(deleteItem(body));
-      case 'reserveItem':       return json(reserveItem(body));
-      case 'cancelReservation': return json(cancelReservation(body));
-      case 'markPurchased':     return json(markPurchased(body));
-      case 'suggestItem':       return json(suggestItem(body));
+      case 'createList':        return json(createList(params));
+      case 'addItem':           return json(addItem(params));
+      case 'updateItem':        return json(updateItem(params));
+      case 'deleteItem':        return json(deleteItem(params));
+      case 'reserveItem':       return json(reserveItem(params));
+      case 'cancelReservation': return json(cancelReservation(params));
+      case 'markPurchased':     return json(markPurchased(params));
+      case 'suggestItem':       return json(suggestItem(params));
       default:
         return json({ ok: false, error: 'Unknown action: ' + action });
     }
