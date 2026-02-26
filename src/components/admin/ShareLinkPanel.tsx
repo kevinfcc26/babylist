@@ -7,7 +7,7 @@ interface ShareLinkPanelProps {
 
 export default function ShareLinkPanel({ shareCode }: ShareLinkPanelProps) {
   const [copied, setCopied] = useState(false)
-  const url = `${window.location.origin}/list/${shareCode}`
+  const url = `${window.location.origin}${import.meta.env.BASE_URL}list/${shareCode}`
 
   async function handleCopy() {
     await navigator.clipboard.writeText(url)

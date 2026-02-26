@@ -7,7 +7,7 @@ interface AdminLinkPanelProps {
 
 export default function AdminLinkPanel({ adminCode }: AdminLinkPanelProps) {
   const [copied, setCopied] = useState(false)
-  const url = `${window.location.origin}/manage/${adminCode}`
+  const url = `${window.location.origin}${import.meta.env.BASE_URL}manage/${adminCode}`
 
   async function handleCopy() {
     await navigator.clipboard.writeText(url)
