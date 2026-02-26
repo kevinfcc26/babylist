@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(\"/c/Users/kevin/OneDrive/Documentos/code/babylistapp/src/components/shared/Modal.tsx\":*)",
+      "Bash(\"/c/Users/kevin/OneDrive/Documentos/code/babylistapp/src/components/shared/Badge.tsx\":*)",
+      "Bash(\"/c/Users/kevin/OneDrive/Documentos/code/babylistapp/src/components/shared/Spinner.tsx\":*)",
+      "Bash(\"/c/Users/kevin/OneDrive/Documentos/code/babylistapp/src/components/shared/ErrorBoundary.tsx\":*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)"
+    ]
+  }
+}

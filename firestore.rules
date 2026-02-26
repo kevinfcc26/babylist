@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anyone can read lists (accessed via shareCode or adminCode)
+    match /lists/{listId} {
+      allow read: if true;
+      // Writes only via Admin SDK (Cloud Functions)
+      allow write: if false;
+    }
+
+    match /lists/{listId}/items/{itemId} {
+      allow read: if true;
+      // Family members can only update reservation and purchase status fields
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['isReserved', 'reservedBy', 'isPurchased', 'purchasedBy', 'quantityPurchased']);
+      // Create and delete only via Admin SDK (Cloud Functions)
+      allow create: if false;
+      allow delete: if false;
+    }
+  }
+}
