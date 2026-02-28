@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@theme {
+  --color-green-50:  #f3f7ef;
+  --color-green-100: #e2edda;
+  --color-green-200: #c5dab6;
+  --color-green-300: #a7c793;
+  --color-green-400: #7aaa6a;
+  --color-green-500: #628e54;
+  --color-green-600: #4e7242;
+}

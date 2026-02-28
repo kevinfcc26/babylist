@@ -23,7 +23,7 @@ export default function BabyShowerBanner({ list }: BabyShowerBannerProps) {
           puedes agregar aquí el regalo que me vas a dar —
           ¡así evitamos que se repitan! 🎁
         </p>
-        <p className="font-medium" style={{ color: '#5a8a5a' }}>
+        <p className="font-medium" style={{ color: '#628e54' }}>
           ¡Los esperamos con mucho amor! ❤️
         </p>
       </div>
