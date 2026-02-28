@@ -57,8 +57,7 @@ export default function AdminPage() {
     return acc
   }, {})
 
-  const purchased = items.filter((i) => i.isPurchased).length
-  const reserved = items.filter((i) => i.isReserved && !i.isPurchased).length
+  const reserved = items.filter((i) => i.isReserved).length
 
   async function handleDelete() {
     if (!deletingItem || !list || !adminCode) return
@@ -93,7 +92,6 @@ export default function AdminPage() {
       <div className="mt-6">
         <ListProgressBar
           total={items.length}
-          purchased={purchased}
           reserved={reserved}
         />
       </div>
