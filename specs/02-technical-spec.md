@@ -9,25 +9,47 @@
 | Language | TypeScript | 5.6.x |
 | Styling | Tailwind CSS | 4.x (via @tailwindcss/vite) |
 | Routing | React Router | 6.28.x |
-| Database | Firebase Firestore | 11.x SDK |
-| Backend | Firebase Cloud Functions | Node 20 |
-| Sheets sync | Google Sheets API v4 | googleapis 144.x |
-| Hosting | Firebase Hosting | — |
-| ID generation | nanoid | 5.x |
+| Backend | Google Apps Script Web App | — |
+| Database | Google Sheets | — |
+| Hosting | GitHub Pages | — |
+| CI/CD | GitHub Actions | — |
+
+> **Note:** Firebase, Firestore, Cloud Functions, and nanoid were removed. The GAS Web App generates IDs server-side using `Utilities.getUuid()`.
+
+---
 
 ## Architecture
 
 ```
-Browser
-  └── React SPA (Vite, Firebase Hosting)
-        ├── Firestore SDK (real-time onSnapshot)
-        └── HTTP requests → Cloud Functions (if any)
-
-Firebase Firestore (source of truth)
-  └── onDocumentWritten triggers → Cloud Functions
-        └── Google Sheets API v4
-              └── Google Sheet (read-only mirror)
+Browser (React SPA — GitHub Pages)
+  └── fetch() GET → Google Apps Script Web App
+                      └── SpreadsheetApp
+                            ├── Registry Spreadsheet  (maps codes → spreadsheet IDs)
+                            └── List Spreadsheet(s)   (meta sheet + items sheet per list)
 ```
+
+All requests from the browser go to a single GAS Web App URL. The GAS script runs under the deploying Google account and has full access to all spreadsheets it creates.
+
+---
+
+## Request Pattern
+
+All API calls use **GET** requests to avoid the GAS POST→GET redirect bug. Parameters are encoded as:
+
+- `action` — plain query param (e.g. `?action=createList`)
+- `payload` — JSON-encoded string containing everything else (e.g. `?payload={"title":"..."}`)
+
+```ts
+// src/services/gasClient.ts
+const url = new URL(GAS_URL)
+url.searchParams.set('action', action)
+url.searchParams.set('payload', JSON.stringify(rest))
+fetch(url.toString())  // GET
+```
+
+The GAS `doGet(e)` handler unpacks `e.parameter.action` and `JSON.parse(e.parameter.payload)`.
+
+---
 
 ## Routes
 
@@ -38,59 +60,52 @@ Firebase Firestore (source of truth)
 | `/manage/:adminCode` | AdminPage | Owner only |
 | `*` | NotFoundPage | — |
 
+`createBrowserRouter` is called with `{ basename: import.meta.env.BASE_URL }` so the router is aware of the `/babylist/` prefix on GitHub Pages.
+
+---
+
 ## Security Model
 
-- `shareCode` = nanoid(6) ≈ 30 bits entropy (sufficient for sharing)
-- `adminCode` = nanoid(12) ≈ 70 bits entropy (sufficient for admin access)
-- Firestore rules restrict family to only update status fields (isReserved, reservedBy, isPurchased, purchasedBy)
-- All item creates/deletes go through Cloud Functions (admin SDK bypasses rules)
-- No server-side session or JWT required
+- `shareCode` — 6-character random alphanumeric, generated in GAS. Embedded in the family URL. Grants read + reserve + purchase access.
+- `adminCode` — 12-character random alphanumeric, generated in GAS. Embedded in the owner URL. Required for all write operations (add/edit/delete item).
+- Both codes are validated server-side in GAS before any action is performed.
+- No server session, no JWT, no login required.
 
-## Firebase Project Setup
-
-1. Create Firebase project (Blaze plan required for external API calls)
-2. Enable Firestore in production mode
-3. Enable Cloud Functions
-4. Enable Firebase Hosting
-5. Create service account for Sheets API (download JSON key)
-6. Share the service account email as Editor on the target Google Sheet
+---
 
 ## Environment Variables
 
-### Frontend (.env)
-```
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
-```
+### Frontend (`.env` locally, GitHub Actions variable in CI)
 
-### Functions (functions/.env)
-```
-SERVICE_ACCOUNT_JSON={"type":"service_account",...}
-```
+| Variable | Description |
+|---|---|
+| `VITE_GAS_URL` | Google Apps Script Web App deployment URL |
 
-## Deployment
+### Vite build-time
 
-```bash
-# Deploy everything
-firebase deploy --only hosting,functions,firestore
+| Variable | Set by | Description |
+|---|---|---|
+| `VITE_BASE` | GitHub Actions workflow | Base path (`/babylist/`). Vite exposes it as `import.meta.env.BASE_URL`. |
 
-# Deploy only frontend
-npm run build && firebase deploy --only hosting
-
-# Deploy only functions
-firebase deploy --only functions
-```
+---
 
 ## Local Development
 
 ```bash
-# Frontend dev server
-npm run dev
+# Copy and fill in the GAS URL
+cp .env.example .env
 
-# Firebase emulators (Firestore + Functions)
-firebase emulators:start
+# Start dev server (reads .env)
+npm run dev
+# → http://localhost:5173
+```
+
+## Deployment
+
+Handled automatically by GitHub Actions on every push to `main`. See [07-github-pages-deployment.md](./07-github-pages-deployment.md).
+
+```bash
+# Manual production build (for testing)
+npm run build
+npm run preview
 ```

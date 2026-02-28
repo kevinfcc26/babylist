@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Input from '../shared/Input'
 import Button from '../shared/Button'
-import { suggestItem } from '../../services/items'
+import { suggestItem, reserveItem } from '../../services/items'
 import { CATEGORIES } from '../../types/list'
 import type { Category } from '../../types/list'
 
@@ -18,7 +18,6 @@ export default function SuggestItemForm({ listId, shareCode, onSuccess, onCancel
   const [form, setForm] = useState({
     name: '',
     category: CATEGORIES[0] as Category,
-    notes: '',
     addedBy: '',
   })
 
@@ -28,15 +27,16 @@ export default function SuggestItemForm({ listId, shareCode, onSuccess, onCancel
     if (!form.addedBy.trim()) { setError('Tu nombre es requerido'); return }
     setLoading(true)
     try {
-      await suggestItem(listId, shareCode, {
+      const itemId = await suggestItem(listId, shareCode, {
         name: form.name.trim(),
         category: form.category,
-        notes: form.notes.trim(),
+        notes: '',
         addedBy: form.addedBy.trim(),
       })
+      await reserveItem(listId, itemId, form.addedBy.trim(), shareCode)
       onSuccess()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al sugerir')
+      setError(err instanceof Error ? err.message : 'Error al agregar')
     } finally {
       setLoading(false)
     }
@@ -55,17 +55,11 @@ export default function SuggestItemForm({ listId, shareCode, onSuccess, onCancel
         <select
           value={form.category}
           onChange={e => setForm(p => ({ ...p, category: e.target.value as Category }))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-400"
         >
           {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
-      <Input
-        label="Notas (opcional)"
-        placeholder="Marca, talla, color..."
-        value={form.notes}
-        onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-      />
       <Input
         label="Tu nombre"
         placeholder="María García"
@@ -78,7 +72,7 @@ export default function SuggestItemForm({ listId, shareCode, onSuccess, onCancel
           Cancelar
         </Button>
         <Button type="submit" loading={loading} className="flex-1">
-          Sugerir
+          Agregar
         </Button>
       </div>
     </form>

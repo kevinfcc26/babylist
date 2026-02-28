@@ -87,7 +87,7 @@ export default function ItemForm({ listId, adminCode, item, onSuccess, onCancel 
         <select
           value={form.category}
           onChange={set('category')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-400"
         >
           {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -97,7 +97,7 @@ export default function ItemForm({ listId, adminCode, item, onSuccess, onCancel 
         <select
           value={form.priority}
           onChange={set('priority')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-pink-400"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-400"
         >
           {PRIORITIES.map(p => (
             <option key={p} value={p}>
@@ -136,7 +136,7 @@ export default function ItemForm({ listId, adminCode, item, onSuccess, onCancel 
           onChange={set('notes')}
           rows={2}
           placeholder="Marca, talla, color preferido..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-pink-400 resize-none"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-400 resize-none"
         />
       </div>
       {errors._ && <p className="md:col-span-2 text-sm text-red-500">{errors._}</p>}

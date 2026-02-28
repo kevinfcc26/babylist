@@ -13,8 +13,8 @@ export default function CategoryFilter({ selected, onChange, counts }: CategoryF
         onClick={() => onChange(null)}
         className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
           selected === null
-            ? 'bg-pink-500 text-white'
-            : 'bg-white text-gray-600 border border-gray-200 hover:border-pink-300'
+            ? 'bg-green-400 text-white'
+            : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300'
         }`}
       >
         Todos
@@ -25,8 +25,8 @@ export default function CategoryFilter({ selected, onChange, counts }: CategoryF
           onClick={() => onChange(cat)}
           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
             selected === cat
-              ? 'bg-pink-500 text-white'
-              : 'bg-white text-gray-600 border border-gray-200 hover:border-pink-300'
+              ? 'bg-green-400 text-white'
+              : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300'
           }`}
         >
           {cat} {counts[cat] ? `(${counts[cat]})` : ''}

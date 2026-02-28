@@ -3,247 +3,193 @@
 ## Component Tree
 
 ```
-App (Router)
+App (createBrowserRouter, basename = import.meta.env.BASE_URL)
 ├── / → HomePage
 │   ├── AppShell
 │   │   └── PageHeader
-│   ├── CreateListForm
-│   └── EnterCodeForm
+│   ├── CreateListForm        — calls createList() → redirects to /manage/:adminCode
+│   └── EnterCodeForm         — detects code length (6=share, 12=admin) → redirects
+│
 ├── /list/:shareCode → SharedListPage
-│   ├── AppShell
-│   │   └── PageHeader
+│   ├── AppShell / PageHeader
 │   ├── ListProgressBar
 │   ├── CategoryFilter
 │   ├── ItemGrid
 │   │   └── ItemCard (×n)
-│   │       └── ReserveModal (conditional)
-│   └── SuggestItemForm
+│   │       └── ReserveModal
+│   └── SuggestItemForm       — calls suggestItem(listId, shareCode, ...)
+│
 ├── /manage/:adminCode → AdminPage
-│   ├── AppShell
-│   │   └── PageHeader
-│   ├── ShareLinkPanel
-│   ├── AdminLinkPanel
-│   ├── SheetsSyncStatus
+│   ├── AppShell / PageHeader
+│   ├── ShareLinkPanel        — URL uses import.meta.env.BASE_URL
+│   ├── AdminLinkPanel        — URL uses import.meta.env.BASE_URL
+│   ├── SheetsSyncStatus      — links to Google Sheet
 │   ├── ListProgressBar
-│   ├── ItemForm (add/edit)
-│   ├── ItemTable
-│   │   └── DeleteConfirmModal (conditional)
-│   └── CategoryFilter
+│   ├── ItemForm              — calls addItem / updateItem with adminCode
+│   ├── CategoryFilter
+│   ├── ItemTable             — responsive (table on desktop, cards on mobile)
+│   └── DeleteConfirmModal
+│
 └── * → NotFoundPage
 ```
+
+---
+
+## Data flow
+
+- `useList(shareCode)` and `useAdminList(adminCode)` both return `{ list, items, loading, error, refresh }`.
+- Items are bundled in the same GAS `getList` response — no separate items fetch.
+- After any mutation (reserve, purchase, add, delete), `refresh()` is called to re-fetch.
+- Polling runs every 10 seconds while the tab is visible.
+
+---
 
 ## Shared Components (`src/components/shared/`)
 
 ### Button
 ```ts
 interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  loading?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
-  type?: 'button' | 'submit' | 'reset';
-  children: React.ReactNode;
-  className?: string;
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  loading?: boolean
+  disabled?: boolean
+  type?: 'button' | 'submit' | 'reset'
+  children: React.ReactNode
+  className?: string
 }
 ```
 
 ### Input
 ```ts
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helper?: string;
+  label?: string
+  error?: string
+  helper?: string
 }
 ```
 
 ### Modal
 ```ts
 interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  children: ReactNode
+  size?: 'sm' | 'md' | 'lg'
 }
 ```
+Locks body scroll while open. Closes on backdrop click.
 
 ### Badge
 ```ts
 interface BadgeProps {
-  variant: 'success' | 'warning' | 'error' | 'info' | 'neutral';
-  children: React.ReactNode;
+  variant?: 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'pink'
+  children: ReactNode
 }
 ```
 
-### Spinner
-```ts
-interface SpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
-```
+### Spinner, EmptyState, ErrorBoundary
+Standard loading / empty / error display components.
 
-### EmptyState
-```ts
-interface EmptyStateProps {
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-}
-```
+---
 
 ## Layout Components (`src/components/layout/`)
 
 ### AppShell
-- Full-page container with max-width, centered
-- Mobile-first, padding adjusts at md breakpoint
+Full-page container with pink→purple gradient, max-w-5xl, centered.
 
 ### PageHeader
 ```ts
 interface PageHeaderProps {
-  title: string;
-  subtitle?: string;
-  action?: React.ReactNode;
+  title: string
+  subtitle?: string
+  action?: ReactNode   // right-aligned slot (e.g. "+ Add item" button)
 }
 ```
+
+---
 
 ## Home Components (`src/components/home/`)
 
 ### CreateListForm
-- Fields: title, ownerName, babyName, dueDate
-- On submit: calls `createList()`, redirects to `/manage/:adminCode`
-- Validation: all fields required
+Fields: title, ownerName, babyName, dueDate. All required. On submit calls `createList()` and redirects to `/manage/:adminCode`.
 
 ### EnterCodeForm
-- Input for shareCode or adminCode (detected by length)
-- Redirects to appropriate page
+Single input. 6-char → redirect to `/list/:code`. 12-char → redirect to `/manage/:code`.
+
+---
 
 ## List Components (`src/components/list/`)
 
 ### ItemCard
 ```ts
 interface ItemCardProps {
-  item: ListItem;
-  onReserve: (item: ListItem) => void;
-  onMarkPurchased: (item: ListItem) => void;
+  listId: string
+  shareCode: string     // passed to all item service calls
+  item: ListItem
+  onMutate: () => void  // triggers refresh after reserve/purchase
 }
 ```
-- Shows: name, category badge, priority badge, quantity progress, notes
-- CTA: "Reservar" (if available), "Marcar como comprado" (if reserved by me)
-- Purchased items show green checkmark
 
 ### ItemGrid
-- Responsive grid: 1 col mobile, 2 col tablet, 3 col desktop
-- Renders `<ItemCard />` for each item
-
-### CategoryFilter
 ```ts
-interface CategoryFilterProps {
-  selected: string | null;
-  onChange: (category: string | null) => void;
-  counts: Record<string, number>;
+interface ItemGridProps {
+  listId: string
+  shareCode: string
+  items: ListItem[]
+  onMutate: () => void
 }
 ```
-
-### PriorityBadge
-```ts
-interface PriorityBadgeProps {
-  priority: Priority;
-}
-```
-- high → red badge "Alta"
-- medium → yellow badge "Media"
-- low → gray badge "Baja"
+Responsive grid: 1 col mobile / 2 col tablet / 3 col desktop.
 
 ### ReserveModal
-```ts
-interface ReserveModalProps {
-  item: ListItem;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: (name: string) => Promise<void>;
-}
-```
-- Input: "¿Cuál es tu nombre?"
-- Calls `reserveItem` transaction
+Asks for the reserver's name. Calls `reserveItem(listId, itemId, name, shareCode)`.
 
 ### SuggestItemForm
-- Compact form: name, category, notes, suggestedBy name
-- Calls `addItem` with the suggestion
-
-### ListProgressBar
 ```ts
-interface ListProgressBarProps {
-  total: number;
-  purchased: number;
-  reserved: number;
+interface SuggestItemFormProps {
+  listId: string
+  shareCode: string
+  onSuccess: () => void
+  onCancel: () => void
 }
 ```
-- Shows "X of Y items purchased (Z reserved)"
-- Visual progress bar
+
+### CategoryFilter
+Pill buttons for each category + "Todos". Shows item count per category.
+
+### PriorityBadge
+high → red "Alta" / medium → yellow "Media" / low → gray "Baja"
+
+### ListProgressBar
+Shows purchased / reserved / available breakdown with a color-coded bar.
+
+---
 
 ## Admin Components (`src/components/admin/`)
 
 ### ItemForm
 ```ts
 interface ItemFormProps {
-  listId: string;
-  item?: ListItem; // if provided, edit mode
-  onSuccess: () => void;
-  onCancel: () => void;
+  listId: string
+  adminCode: string     // required for addItem / updateItem
+  item?: ListItem       // if provided → edit mode
+  onSuccess: () => void
+  onCancel: () => void
 }
 ```
-- Full item creation/edit form
-- All fields including imageUrl, notes, priority
 
 ### ItemTable
-```ts
-interface ItemTableProps {
-  items: ListItem[];
-  onEdit: (item: ListItem) => void;
-  onDelete: (item: ListItem) => void;
-}
-```
-- Desktop: table layout
-- Mobile: card list
-- Columns: Name, Category, Qty, Priority, Status, Actions
+Desktop: HTML table. Mobile: card list. Edit and Delete buttons per row.
 
 ### ShareLinkPanel
-```ts
-interface ShareLinkPanelProps {
-  shareCode: string;
-}
-```
-- Displays the shareable URL
-- Copy-to-clipboard button
+Builds URL as `window.location.origin + import.meta.env.BASE_URL + "list/" + shareCode`. Copy-to-clipboard button.
 
 ### AdminLinkPanel
-```ts
-interface AdminLinkPanelProps {
-  adminCode: string;
-}
-```
-- Displays the admin URL (keep private!)
-- Copy-to-clipboard button
+Same pattern but for the admin route. Warns user to keep it private.
 
 ### SheetsSyncStatus
-```ts
-interface SheetsSyncStatusProps {
-  googleSheetId: string | null;
-  listId: string;
-}
-```
-- Shows Google Sheet link if connected
-- Shows "Not connected" with spinner if pending
-- Manual re-sync button
+Shows a link to the Google Sheet (`googleSheetId` from the list). Shows a spinner if `googleSheetId` is null (GAS hasn't finished setup yet).
 
 ### DeleteConfirmModal
-```ts
-interface DeleteConfirmModalProps {
-  item: ListItem | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => Promise<void>;
-}
-```
+Confirms before calling `deleteItem(listId, itemId, adminCode)`. Warns if item is reserved.

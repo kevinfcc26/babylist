@@ -24,7 +24,7 @@ export default function ShareLinkPanel({ shareCode }: ShareLinkPanelProps) {
       <p className="text-xs text-gray-400 mb-3 break-all">{url}</p>
       <button
         onClick={handleCopy}
-        className="w-full py-2 bg-pink-50 text-pink-600 rounded-xl text-sm font-medium hover:bg-pink-100 transition-colors"
+        className="w-full py-2 bg-green-50 text-green-600 rounded-xl text-sm font-medium hover:bg-green-100 transition-colors"
       >
         {copied ? '¡Copiado!' : 'Copiar enlace'}
       </button>

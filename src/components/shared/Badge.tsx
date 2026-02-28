@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 interface BadgeProps {
-  variant?: 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'pink'
+  variant?: 'success' | 'warning' | 'error' | 'info' | 'neutral' | 'green'
   children: ReactNode
   className?: string
 }
@@ -12,7 +12,7 @@ const variantClasses: Record<string, string> = {
   error: 'bg-red-100 text-red-700',
   info: 'bg-blue-100 text-blue-700',
   neutral: 'bg-gray-100 text-gray-600',
-  pink: 'bg-pink-100 text-pink-700',
+  green: 'bg-green-100 text-green-700',
 }
 
 export default function Badge({ variant = 'neutral', children, className = '' }: BadgeProps) {

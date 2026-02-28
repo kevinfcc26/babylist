@@ -43,7 +43,7 @@ export default function ReserveModal({ item, isOpen, onClose, onConfirm }: Reser
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Reservar artículo" size="sm">
       <div className="flex flex-col gap-4">
-        <div className="bg-pink-50 rounded-xl p-3">
+        <div className="bg-green-50 rounded-xl p-3">
           <p className="font-medium text-gray-900">{item.name}</p>
           <p className="text-sm text-gray-500 mt-0.5">{item.category}</p>
         </div>

@@ -12,7 +12,7 @@ export default function NotFoundPage() {
         </p>
         <Link
           to="/"
-          className="inline-flex items-center px-6 py-3 bg-pink-500 text-white rounded-xl font-medium hover:bg-pink-600 transition-colors"
+          className="inline-flex items-center px-6 py-3 bg-green-400 text-white rounded-xl font-medium hover:bg-green-500 transition-colors"
         >
           Ir al inicio
         </Link>
